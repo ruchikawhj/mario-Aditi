@@ -4,13 +4,15 @@ var mario, marioAni;
 var obstacle1, obstacle2, obstaclesGroup;
 var coinImage, coinGroup, coin;
 var bullet, bulletImg, bulletGroup;
-var start,startImg;
+var start, startImg;
 
-var jumpSound,dieSound,bgSound,coinSound,shootSound;
+var jumpSound, dieSound, bgSound, coinSound, shootSound;
 
 var score = 0;
 var gameState = 0;
-var slide=1;
+var lives = 3;
+var slide = 1;
+
 function preload() {
   cloud1 = loadImage("assets/cloud1.png")
   cloud2 = loadImage("assets/cloud2.png")
@@ -20,11 +22,11 @@ function preload() {
   coinImage = loadImage("assets/coin.png");
   bulletImg = loadImage("assets/bullet.png");
   startImg = loadImage("assets/start.png");
-  jumpSound=loadSound("assets/sounds/jump.mp3");
-  bgSound=loadSound("assets/sounds/background.mp3");
-  dieSound=loadSound("assets/sounds/die.mp3");
-  coinSound=loadSound("assets/sounds/coin.mp3");
- // shootSound=loadSound("assets/sounds/shoot.mp3");
+  jumpSound = loadSound("sounds/jump.mp3");
+   bgSound = loadSound("sounds/background.mp3");
+  dieSound = loadSound("sounds/die.mp3");
+  coinSound = loadSound("sounds/coin.mp3");
+  //shootSound = loadSound("assets/sounds/shoot.mp3");*/
 
 
   marioAni = loadAnimation("assets/mario/mario1.png", "assets/mario/mario2.png", "assets/mario/mario3.png", "assets/mario/mario4.png", "assets/mario/mario5.png", "assets/mario/mario6.png", "assets/mario/mario7.png", "assets/mario/mario8.png", "assets/mario/mario9.png", "assets/mario/mario10.png", "assets/mario/mario11.png", "assets/mario/mario12.png");
@@ -39,18 +41,20 @@ function setup() {
   mario = createSprite(100, height - 300);
   mario.addAnimation("running", marioAni);
   mario.scale = 0.25;
-  mario.visible=false;
+  mario.visible = false;
 
-  start=createSprite(width/2+50,height/2-50);
+  start = createSprite(width / 2 + 50, height / 2 - 50);
   start.addImage(startImg);
-  start.scale=0.6;
-  start.visible=false;
+  start.scale = 0.6;
+  start.visible = false;
 
   cloudsGroup = new Group();
   coinGroup = new Group();
   obstaclesGroup = new Group()
   bulletGroup = new Group()
-  bgSound.play();
+   bgSound.play();
+   bgSound.loop();
+   bgSound.setVolume(0.5)
 }
 
 function draw() {
@@ -59,27 +63,28 @@ function draw() {
   fill("white");
   stroke("black");
   strokeWeight(2)
-  if(gameState===0){
-    
-    text("Press Space to continue",width/2-175,height/2+100)
-    if(slide==1){
-     
-      text("Welcome To The World of Mario!!!!!!!!",width/2-300,height/2-200)
+  if (gameState === 0) {
 
-      
+    text("Press Space to continue", width / 2 - 175, height / 2 + 100)
+    if (slide == 1) {
+
+      text("Welcome To The World of Mario!!!!!!!!", width / 2 - 300, height / 2 - 200)
+
+
     }
-    if(slide==2){
-     
-      text("Kill the Monsters and Collect the Coins",width/2-300,height/2-200)
+    if (slide == 2) {
+
+      text("Kill the Monsters and Collect the Coins", width / 2 - 300, height / 2 - 200)
     }
-    if(slide==3){
-     
-      text("Press t to shoot and space to jump",width/2-300,height/2-200);
-      start.visible=true;
-      if(mousePressedOver(start)){
-        gameState=1;
-        start.visible=false;
-        mario.visible=true;
+    if (slide == 3) {
+
+      text("Press t to shoot and space to jump", width / 2 - 300, height / 2 - 200);
+      start.visible = true;
+      if (mousePressedOver(start)) {
+        gameState = 1;
+        slide = 0;
+        start.visible = false;
+        mario.visible = true;
       }
     }
 
@@ -115,29 +120,47 @@ function draw() {
         }
       }
     }
+    for (var j = 0; j < obstaclesGroup.length; j++) {
+      if (obstaclesGroup.get(j).isTouching(mario)) {
 
-    if(obstaclesGroup.isTouching(mario)){
-      gameState=2;
-      dieSound.play();
-      mario.velocityY=0;
-      mario.destroy();
-      obstaclesGroup.setVelocityXEach(0);
-      obstaclesGroup.setLifetimeEach(-1);
-      coinGroup.setVelocityXEach(0);
-      coinGroup.setLifetimeEach(-1);
-      cloudsGroup.setVelocityXEach(0);
-      cloudsGroup.setLifetimeEach(-1);
-      ground.velocityX=0;
+        obstaclesGroup.get(j).destroy();
 
+        lifeOver();
+        dieSound.play();
+      }
     }
+
+
     spawnClouds();
     spawnObstacle1();
     spawnCoins();
     mario.collide(ground);
-   
+
   }
-  if(gameState===2){
-    console.log("End State");
+  if (gameState === 2) {
+
+    textSize(40);
+    fill("white");
+    stroke("black");
+    strokeWeight(2)
+    text("GAME OVER!!!!!!", width / 2 - 175, height / 2 + 100)
+
+    mario.velocityY = 0;
+    mario.destroy();
+
+    obstaclesGroup.setVelocityXEach(0);
+    obstaclesGroup.setLifetimeEach(-1);
+
+    coinGroup.setVelocityXEach(0);
+    coinGroup.setLifetimeEach(-1);
+
+    cloudsGroup.setVelocityXEach(0);
+    cloudsGroup.setLifetimeEach(-1);
+
+    ground.velocityX = 0;
+  }
+  if (gameState === 4) {
+    text("Press r to continue", width / 2 - 175, height / 2 + 100)
   }
 
   drawSprites();
@@ -147,8 +170,10 @@ function draw() {
   stroke("black");
   strokeWeight(2)
   text("Coins: " + score, width - 300, 100);
+  text("Lives: " + lives, width - 300, 150);
 
 }
+
 
 function spawnClouds() {
   if (frameCount % 120 === 0) {
@@ -218,10 +243,41 @@ function spawnCoins() {
 
 }
 
-function keyReleased(){
-  if(gameState===0 && slide<3){
-    if(keyDown("space")){
+function keyReleased() {
+  if (gameState === 0 && slide < 3) {
+    if (keyDown("space")) {
       slide++;
     }
+  }
+
+  if (keyDown("r") && gameState == 4) {
+
+    gameState = 1;
+    obstaclesGroup.destroyEach();
+    coinGroup.destroyEach();
+    cloudsGroup.destroyEach();
+  }
+}
+
+function lifeOver() {
+  lives--;
+  if (lives <= 0) {
+    gameState = 2;
+  }
+  else {
+    gameState = 4;
+    mario.velocityY = 0;
+    obstaclesGroup.setVelocityXEach(0);
+    obstaclesGroup.setLifetimeEach(-1);
+    coinGroup.setVelocityXEach(0);
+    coinGroup.setLifetimeEach(-1);
+    cloudsGroup.setVelocityXEach(0);
+    cloudsGroup.setLifetimeEach(-1);
+    ground.velocityX = 0;
+    textSize(40);
+    fill("white");
+    stroke("black");
+    strokeWeight(2);
+   
   }
 }
